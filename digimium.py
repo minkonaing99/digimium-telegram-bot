@@ -5,6 +5,7 @@ nest_asyncio.apply()
 
 import mysql.connector
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from telegram import (
     Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 )
@@ -170,7 +171,8 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         price = float(lines[3]) if len(lines) >= 4 else float(product['retail_price'])
         wc_price = float(product['wc_price'] or 0)
         profit = price - wc_price
-        today = datetime.today()
+        today = datetime.now(ZoneInfo("Asia/Bangkok"))
+
         end_date = today + timedelta(days=30 * int(product['duration']))
         data = {
             'product_id': product['product_id'],
@@ -204,7 +206,8 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'profit': profit,
             'seller': seller,
             'note': '',
-            'date': datetime.today().strftime('%Y-%m-%d')
+            'date': datetime.now(ZoneInfo("Asia/Bangkok")).strftime('%Y-%m-%d')
+
         }
         save_wc(data)
         await update.message.reply_text("Order saved.")
@@ -222,7 +225,8 @@ async def summary_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             date_str = context.args[0]
             datetime.strptime(date_str, '%Y-%m-%d')  # Validate format
         else:
-            date_str = datetime.today().strftime('%Y-%m-%d')
+            date_str = datetime.now(ZoneInfo("Asia/Bangkok")).strftime('%Y-%m-%d')
+
     except ValueError:
         await update.message.reply_text("Invalid date format. Use `/summary YYYY-MM-DD`", parse_mode="Markdown")
         return
