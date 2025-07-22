@@ -149,13 +149,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         name = query.data.replace("retail_product_", "")
         product = fetch_product_details(name, "product_list")
         context.user_data.update({"flow": "retail", "product": product, "awaiting": True})
-        await query.edit_message_text("Enter Customer Name, Gmail, [optional Price] (one per line):")
+        await query.edit_message_text("Please type this like one per line\nCustomerName\nGmail\nManager\n[optional Price]:")
 
     elif query.data.startswith("wc_product_"):
         name = query.data.replace("wc_product_", "")
         product = fetch_product_details(name, "wc_product_list")
         context.user_data.update({"flow": "wc", "product": product, "awaiting": True})
-        await query.edit_message_text("Enter Name, Email, Quantity, [optional Price] (one per line):")
+        await query.edit_message_text("Please type this like one per line\nCustomerName\nGmail\nManager\nQuantity\n[optional Price]:")
 
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.user_data.get("awaiting"):
@@ -164,11 +164,10 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lines = [l.strip() for l in update.message.text.splitlines() if l.strip()]
     product = context.user_data['product']
     flow = context.user_data['flow']
-    seller = update.effective_user.username or 'unknown'
 
-    if flow == 'retail' and len(lines) >= 2:
-        name, gmail = lines[0], lines[1]
-        price = float(lines[2]) if len(lines) >= 3 else float(product['retail_price'])
+    if flow == 'retail' and len(lines) >= 3:
+        name, gmail, seller = lines[0], lines[1], lines[2]
+        price = float(lines[3]) if len(lines) >= 4 else float(product['retail_price'])
         wc_price = float(product['wc_price'] or 0)
         profit = price - wc_price
         today = datetime.today()
@@ -189,10 +188,10 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_retail(data)
         await update.message.reply_text("Order saved.")
 
-    elif flow == 'wc' and len(lines) >= 3:
-        name, email = lines[0], lines[1]
-        quantity = int(lines[2])
-        price = float(lines[3]) if len(lines) >= 4 else float(product['retail_price'])
+    elif flow == 'wc' and len(lines) >= 4:
+        name, email, seller = lines[0], lines[1], lines[2]
+        quantity = int(lines[3])
+        price = float(lines[4]) if len(lines) >= 5 else float(product['retail_price'])
         wc_price = float(product['wc_price'] or 0)
         profit = (price - wc_price) * quantity
         data = {
@@ -214,6 +213,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Invalid input format.")
 
     context.user_data.clear()
+
 
 
 async def summary_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
